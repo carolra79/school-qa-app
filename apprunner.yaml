@@ -13,3 +13,11 @@ run:
   env:
     - name: PORT
       value: "8080"
+    - name: KNOWLEDGE_BASE_ID
+      value: "D5MRCKWCTD"
+    - name: DATA_SOURCE_ID
+      value: "T4PVH55UXI"
+    - name: S3_BUCKET
+      value: "school-qa-docs-v2"
+    - name: AWS_REGION
+      value: "us-east-1"
