@@ -69,24 +69,18 @@ def query_agentcore_runtime(question):
         # AgentCore Runtime ARN
         runtime_arn = "arn:aws:bedrock-agentcore:us-east-1:185749752590:runtime/school_qa_agent-0BI6caDueE"
         
-        bedrock_agentcore = boto3.client('bedrock-agentcore-runtime', region_name=AWS_REGION)
+        bedrock_agentcore = boto3.client('bedrock-agentcore', region_name=AWS_REGION)
         
-        response = bedrock_agentcore.invoke_agent(
-            agentId=runtime_arn.split('/')[-1].split('-')[0],
-            agentAliasId=runtime_arn.split('-')[-1],
-            sessionId=st.session_state.session_id,
-            inputText=question
+        response = bedrock_agentcore.invoke_runtime(
+            runtimeArn=runtime_arn,
+            inputText=question,
+            sessionId=st.session_state.session_id
         )
         
         # Extract the response text
-        answer = ""
-        for event in response['completion']:
-            if 'chunk' in event:
-                chunk = event['chunk']
-                if 'bytes' in chunk:
-                    answer += chunk['bytes'].decode('utf-8')
+        answer = response.get('outputText', "I couldn't find an answer to your question.")
         
-        return answer if answer else "I couldn't find an answer to your question."
+        return answer
         
     except Exception as e:
         return f"Error querying AgentCore Runtime: {str(e)}"
