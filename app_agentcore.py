@@ -64,26 +64,51 @@ def sync_knowledge_base():
         return False, None
 
 def query_agentcore_runtime(question):
-    """Query AgentCore Runtime"""
+    """Query the knowledge base using retrieve_and_generate"""
     try:
-        # AgentCore Runtime ARN
-        runtime_arn = "arn:aws:bedrock-agentcore:us-east-1:185749752590:runtime/school_qa_agent-0BI6caDueE"
+        from datetime import datetime
         
-        bedrock_agentcore = boto3.client('bedrock-agentcore', region_name=AWS_REGION)
+        bedrock_agent_runtime = boto3.client('bedrock-agent-runtime', region_name=AWS_REGION)
         
-        response = bedrock_agentcore.invoke_runtime(
-            runtimeArn=runtime_arn,
-            inputText=question,
-            sessionId=st.session_state.session_id
+        current_date = datetime.now().strftime("%B %Y")
+        current_month = datetime.now().month
+        
+        if current_month in [9, 10, 11, 12]:
+            current_term = "Autumn"
+        elif current_month in [1, 2, 3, 4]:
+            current_term = "Spring"
+        else:
+            current_term = "Summer"
+        
+        response = bedrock_agent_runtime.retrieve_and_generate(
+            input={'text': question},
+            retrieveAndGenerateConfiguration={
+                'type': 'KNOWLEDGE_BASE',
+                'knowledgeBaseConfiguration': {
+                    'knowledgeBaseId': KNOWLEDGE_BASE_ID,
+                    'modelArn': f'arn:aws:bedrock:{AWS_REGION}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0',
+                    'generationConfiguration': {
+                        'promptTemplate': {
+                            'textPromptTemplate': f'''Answer the question based on the school documents. Be direct and concise.
+
+CONTEXT: Today is {current_term} term {current_date}. Terms typically Autumn: early Sept to late December then a break for christmas. Spring: Early Jan to late March or early April then a break for easter. Summer: late april to late july then a break for the summer holidays. The most accurate document for term dates will be a pdf with the title:St-Marys-Term-Dates
+
+CRITICAL: When someone asks "last day of term" or "end of term", they mean the current {current_term} term. You should be able to see 3 last days of term, one for December, one for March or April and one for July. If you are not sure what the current date or term is, give all three dates in the form "the last days of term are: Autumn <date>, Spring <date>, Summer <date>"
+
+Question: $query$
+Context: $search_results$
+
+Answer:'''
+                        }
+                    }
+                }
+            }
         )
         
-        # Extract the response text
-        answer = response.get('outputText', "I couldn't find an answer to your question.")
-        
-        return answer
+        return response['output']['text']
         
     except Exception as e:
-        return f"Error querying AgentCore Runtime: {str(e)}"
+        return f"Error querying knowledge base: {str(e)}"
 
 def main():
     st.set_page_config(
