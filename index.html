@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>St Marys Class Rep Bot</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .container { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        .upload-section, .query-section { padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .hidden { display: none; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        input, textarea { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .answer { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .sources { background: #e9ecef; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .sample-questions button { background: #28a745; margin: 5px; }
+        .login-form { max-width: 300px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📚 St Marys Year 5 Class Rep Bot</h1>
+        <p>Powered by AWS Bedrock Knowledge Base</p>
+    </div>
+
+    <div id="loginSection" class="login-form">
+        <h3>Login (for uploads)</h3>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <div id="loginError" style="color: red; margin-top: 10px;"></div>
+    </div>
+
+    <div id="mainApp" class="hidden">
+        <div class="container">
+            <div id="uploadSection" class="upload-section hidden">
+                <h3>📤 Document Upload</h3>
+                <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt">
+                <button onclick="uploadFiles()">Upload to Knowledge Base</button>
+                <div id="uploadStatus"></div>
+            </div>
+
+            <div class="query-section">
+                <h3>❓ Ask Questions</h3>
+                <input type="text" id="questionInput" placeholder="Ask the Class Rep Bot a question...">
+                <button onclick="askQuestion()">Ask</button>
+                
+                <div id="answer" class="answer hidden"></div>
+                <div id="sources" class="sources hidden"></div>
+
+                <h4>💡 Suggested Questions</h4>
+                <div class="sample-questions">
+                    <button onclick="setQuestion('When are 5M PE Days?')">When are 5M PE Days?</button>
+                    <button onclick="setQuestion('What are the term dates for 2025-26?')">What are the term dates for 2025-26?</button>
+                    <button onclick="setQuestion('When is the christmas fair?')">When is the christmas fair?</button>
+                    <button onclick="setQuestion('When does the autumn term end in 2025?')">When does the autumn term end in 2025?</button>
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="logout()" style="position: fixed; top: 20px; right: 20px;">Logout</button>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let canUpload = false;
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'authenticate', username, password})
+                });
+                
+                const result = await response.json();
+                
+                if (result.authenticated) {
+                    currentUser = username;
+                    canUpload = result.can_upload;
+                    
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('mainApp').classList.remove('hidden');
+                    
+                    if (canUpload) {
+                        document.getElementById('uploadSection').classList.remove('hidden');
+                    }
+                } else {
+                    document.getElementById('loginError').textContent = 'Invalid credentials';
+                }
+            } catch (error) {
+                document.getElementById('loginError').textContent = 'Login failed';
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            canUpload = false;
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        async function uploadFiles() {
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+            
+            if (!files.length) return;
+            
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = 'Uploading...';
+            
+            for (let file of files) {
+                try {
+                    const reader = new FileReader();
+                    reader.onload = async function(e) {
+                        const fileContent = btoa(e.target.result);
+                        
+                        const response = await fetch('/api', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                action: 'upload',
+                                username: currentUser,
+                                filename: file.name,
+                                file_content: fileContent
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        statusDiv.innerHTML += `<br>${file.name}: ${result.message}`;
+                    };
+                    reader.readAsBinaryString(file);
+                } catch (error) {
+                    statusDiv.innerHTML += `<br>${file.name}: Upload failed`;
+                }
+            }
+        }
+
+        async function askQuestion() {
+            const question = document.getElementById('questionInput').value;
+            if (!question) return;
+            
+            try {
+                const response = await fetch('/api', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'query', question})
+                });
+                
+                const result = await response.json();
+                
+                if (result.answer) {
+                    document.getElementById('answer').innerHTML = `<strong>💬 Answer:</strong><br>${result.answer}`;
+                    document.getElementById('answer').classList.remove('hidden');
+                    
+                    if (result.sources && result.sources.length > 0) {
+                        let sourcesHtml = '<strong>📖 Source Documents:</strong><br>';
+                        result.sources.forEach((source, i) => {
+                            const content = source.content.length > 300 ? source.content.substring(0, 300) + '...' : source.content;
+                            const filename = source.source.split('/').pop();
+                            sourcesHtml += `<br><strong>Source ${i+1}:</strong><br>${content}<br><em>From: ${filename}</em><hr>`;
+                        });
+                        document.getElementById('sources').innerHTML = sourcesHtml;
+                        document.getElementById('sources').classList.remove('hidden');
+                    }
+                } else if (result.error) {
+                    document.getElementById('answer').innerHTML = `<strong>Error:</strong> ${result.error}`;
+                    document.getElementById('answer').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('answer').innerHTML = '<strong>Error:</strong> Failed to get answer';
+                document.getElementById('answer').classList.remove('hidden');
+            }
+        }
+
+        function setQuestion(question) {
+            document.getElementById('questionInput').value = question;
+            askQuestion();
+        }
+
+        // Allow Enter key to submit question
+        document.getElementById('questionInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') askQuestion();
+        });
+    </script>
+</body>
+</html>

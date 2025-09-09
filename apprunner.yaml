@@ -1,23 +1,16 @@
 version: 1.0
-runtime: python311
+runtime: python3
 build:
   commands:
     build:
-      - pip3 install -r requirements.txt
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
 run:
-  runtime-version: 3.11.9
-  command: python3 -m streamlit run app.py --server.port 8080 --server.address 0.0.0.0
+  runtime-version: 3.11
+  command: python main.py
   network:
-    port: 8080
+    port: 8000
     env: PORT
   env:
     - name: PORT
-      value: "8080"
-    - name: KNOWLEDGE_BASE_ID
-      value: "D5MRCKWCTD"
-    - name: DATA_SOURCE_ID
-      value: "T4PVH55UXI"
-    - name: S3_BUCKET
-      value: "school-qa-docs-v2"
-    - name: AWS_REGION
-      value: "us-east-1"
+      value: "8000"
