@@ -6,7 +6,7 @@ RUN pip install streamlit boto3
 
 COPY app_agentcore.py .
 COPY config.py .
-COPY "St Marys Logo.png" .
+COPY st-marys-logo.png .
 
 EXPOSE 8501
 

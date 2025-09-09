@@ -120,7 +120,7 @@ def main():
     
     # Display logo and title aligned to the left
     try:
-        st.image("St Marys Logo.png", width=80)
+        st.image("st-marys-logo.png", width=80)
     except:
         st.write("🎓")  # Fallback to emoji if logo not found
     
