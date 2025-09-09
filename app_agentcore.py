@@ -150,7 +150,7 @@ def main():
             unsafe_allow_html=True
         )
         
-        st.markdown("**💬 Ask a Question**")
+        st.subheader("💬 Ask a Question")
         
         # Question input (submits on Enter)
         # Check if we have a selected question to populate
