@@ -13,7 +13,7 @@ venv/
 *.pem
 
 # Streamlit
-.streamlit/
+.streamlit/secrets.toml
 
 # Local files
 uploaded_docs/
