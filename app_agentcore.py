@@ -1,7 +1,20 @@
 import streamlit as st
 import boto3
 import uuid
+import json
 from config import AWS_REGION, S3_BUCKET, DATA_SOURCE_ID, KNOWLEDGE_BASE_ID
+
+@st.cache_data(ttl=300)  # Cache for 5 minutes
+def load_bedrock_config():
+    """Load Bedrock configuration from S3"""
+    try:
+        s3_client = boto3.client('s3', region_name=AWS_REGION)
+        response = s3_client.get_object(Bucket=S3_BUCKET, Key='config/bedrock_config.json')
+        return json.loads(response['Body'].read().decode('utf-8'))
+    except Exception as e:
+        # Fallback to local config
+        with open('bedrock_config.json', 'r') as f:
+            return json.load(f)
 
 # Initialize session state
 if 'authenticated' not in st.session_state:
@@ -66,19 +79,8 @@ def sync_knowledge_base():
 def query_agentcore_runtime(question):
     """Query the knowledge base using retrieve_and_generate"""
     try:
-        from datetime import datetime
-        
+        config = load_bedrock_config()
         bedrock_agent_runtime = boto3.client('bedrock-agent-runtime', region_name=AWS_REGION)
-        
-        current_date = datetime.now().strftime("%B %Y")
-        current_month = datetime.now().month
-        
-        if current_month in [9, 10, 11, 12]:
-            current_term = "Autumn"
-        elif current_month in [1, 2, 3, 4]:
-            current_term = "Spring"
-        else:
-            current_term = "Summer"
         
         response = bedrock_agent_runtime.retrieve_and_generate(
             input={'text': question},
@@ -86,19 +88,16 @@ def query_agentcore_runtime(question):
                 'type': 'KNOWLEDGE_BASE',
                 'knowledgeBaseConfiguration': {
                     'knowledgeBaseId': KNOWLEDGE_BASE_ID,
-                    'modelArn': f'arn:aws:bedrock:{AWS_REGION}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0',
+                    'modelArn': config['model_arn'],
                     'generationConfiguration': {
+                        'inferenceConfig': {
+                            'textInferenceConfig': {
+                                'temperature': config.get('temperature', 0.1),
+                                'maxTokens': config.get('max_tokens', 1000)
+                            }
+                        },
                         'promptTemplate': {
-                            'textPromptTemplate': f'''Answer the question based on the school documents. Be direct and concise.
-
-CONTEXT: Today is {current_term} term {current_date}. Terms typically Autumn: early Sept to late December then a break for christmas. Spring: Early Jan to late March or early April then a break for easter. Summer: late april to late july then a break for the summer holidays. The most accurate document for term dates will be a pdf with the title:St-Marys-Term-Dates
-
-CRITICAL: When someone asks "last day of term" or "end of term", they mean the current {current_term} term. You should be able to see 3 last days of term, one for December, one for March or April and one for July. If you are not sure what the current date or term is, give all three dates in the form "the last days of term are: Autumn <date>, Spring <date>, Summer <date>"
-
-Question: $query$
-Context: $search_results$
-
-Answer:'''
+                            'textPromptTemplate': config['system_instructions'] + '\n\nQuestion: $query$\n\nAnswer:'
                         }
                     }
                 }
