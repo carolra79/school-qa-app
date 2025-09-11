@@ -97,7 +97,7 @@ def query_agentcore_runtime(question):
                             }
                         },
                         'promptTemplate': {
-                            'textPromptTemplate': config['system_instructions'] + '\n\nQuestion: $query$\n\nAnswer:'
+                            'textPromptTemplate': config.get('prompt_template', config['system_instructions'] + '\n\nQuestion: $query$\n\nAnswer:')
                         }
                     }
                 }
