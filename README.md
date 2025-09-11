@@ -26,3 +26,5 @@ AI-powered document Q&A system using AWS Bedrock Knowledge Base.
 pip install -r requirements.txt
 streamlit run app.py
 ```
+
+# Pipeline Test - ECS Fargate Deployment
