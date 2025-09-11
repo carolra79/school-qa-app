@@ -111,11 +111,26 @@ def query_agentcore_runtime(question):
 
 def main():
     st.set_page_config(
-        page_title="St Marys Year5 Class Rep Bot",
+        page_title="St Mary's Yr5 Class Rep Bot",
         page_icon="🎓",  # This shows in browser tab
         layout="wide",
         initial_sidebar_state="collapsed"
     )
+    
+    # Remove top padding/margin
+    st.markdown("""
+        <style>
+        .main > div {
+            padding-top: 2.5rem;
+        }
+        .block-container {
+            padding-top: 2.5rem;
+        }
+        .stImage {
+            margin-bottom: -1rem;
+        }
+        </style>
+        """, unsafe_allow_html=True)
     
     # Display logo and title aligned to the left
     try:
@@ -123,7 +138,7 @@ def main():
     except:
         st.write("🎓")  # Fallback to emoji if logo not found
     
-    st.markdown("# St Marys Year5 Class Rep Bot")
+    st.markdown("# St Mary's Yr5 Class Rep Bot")
     st.markdown("Powered by AWS Bedrock and AgentCore Runtime")
     
     simple_auth()
