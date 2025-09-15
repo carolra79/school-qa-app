@@ -1,0 +1,26 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 185749752590.dkr.ecr.us-east-1.amazonaws.com
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image for ARM64...
+      - docker build -t school-qa-agent .
+      - docker tag school-qa-agent:latest 185749752590.dkr.ecr.us-east-1.amazonaws.com/school-qa-agent:latest
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push 185749752590.dkr.ecr.us-east-1.amazonaws.com/school-qa-agent:latest
+      - echo Image pushed successfully!
+      - |
+        if [ "$DEPLOYMENT_TYPE" = "ECS" ]; then
+          echo Updating ECS service...
+          aws ecs update-service --cluster ${ECS_CLUSTER_NAME:-school-qa-cluster} --service ${ECS_SERVICE_NAME:-school-qa-service} --force-new-deployment --region us-east-1
+          echo ECS service update triggered!
+        else
+          echo Skipping ECS update for EC2 deployment
+        fi

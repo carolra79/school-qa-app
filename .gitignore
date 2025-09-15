@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# AWS
+.aws/
+*.pem
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Local files
+uploaded_docs/
+chroma_db/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
