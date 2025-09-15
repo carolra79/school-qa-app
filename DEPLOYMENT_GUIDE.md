@@ -33,7 +33,7 @@ AI-powered Q&A system for St Mary's School using AWS Bedrock Knowledge Base. All
 - **VPC:** `vpc-4f652935` (default VPC)
 - **Subnets:** All default subnets across availability zones
 - **Application Load Balancer:** `school-qa-alb2-1354046734.us-east-1.elb.amazonaws.com`
-- **CloudFront Distribution:** `https://d3agi2buko5b65.cloudfront.net/`
+- **CloudFront Distribution:** `https://d2y4m4bf53smpx.cloudfront.net/`
 - **Security Group:** `sg-040d5bf56839194b3` (ECS-ALB-security-group)
 
 ### Security Group Configuration
@@ -77,7 +77,7 @@ S3_BUCKET=school-qa-docs-v2
 - **Suggested Questions:** Pre-defined common questions for easy access
 
 ## Access Information
-- **Production URL:** https://d3agi2buko5b65.cloudfront.net/
+- **Production URL:** https://d2y4m4bf53smpx.cloudfront.net/
 - **ALB URL:** http://school-qa-alb2-1354046734.us-east-1.elb.amazonaws.com
 - **Admin Access:** Via sidebar login in the web interface
 - **Admin Credentials:** username: `admin`, password: `admin123`
@@ -199,4 +199,4 @@ Access logs through:
 **Last Updated:** 2025-09-15  
 **Version:** 2.0 (ECS Fargate)  
 **Status:** Production Ready ✅  
-**Access:** https://d3agi2buko5b65.cloudfront.net/
+**Access:** https://d2y4m4bf53smpx.cloudfront.net/
