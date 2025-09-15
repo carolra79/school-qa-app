@@ -46,7 +46,7 @@ def simple_auth():
                 st.sidebar.error("Invalid admin credentials")
 
 def upload_to_s3(file):
-    """Upload file to S3 bucket"""
+    """Upload file to S3 bucket - Updated 2025-09-15 16:43"""
     try:
         s3_client = boto3.client('s3', region_name=AWS_REGION)
         file_key = f"school-docs/{file.name}"
