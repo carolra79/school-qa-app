@@ -40,6 +40,7 @@ phases:
           NEW_TASK_DEF=$(aws ecs register-task-definition \
             --family $TASK_FAMILY \
             --execution-role-arn "$(jq -r '.executionRoleArn' task-definition.json)" \
+            --task-role-arn "$(jq -r '.taskRoleArn // empty' task-definition.json)" \
             --network-mode "$(jq -r '.networkMode' task-definition.json)" \
             --cpu "$(jq -r '.cpu' task-definition.json)" \
             --memory "$(jq -r '.memory' task-definition.json)" \
