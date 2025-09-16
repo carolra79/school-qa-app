@@ -112,7 +112,7 @@ def query_agentcore_runtime(question):
 
 def main():
     st.set_page_config(
-        page_title="St Mary's Yr5 Class Rep Bot v2.0",
+        page_title="St Mary's Yr5 Class Rep Bot v2.1",
         page_icon="🎓",  # This shows in browser tab
         layout="wide",
         initial_sidebar_state="collapsed"
