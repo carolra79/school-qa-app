@@ -50,6 +50,7 @@ def upload_to_s3(file):
     try:
         s3_client = boto3.client('s3', region_name=AWS_REGION)
         file_key = f"school-docs/{file.name}"
+        print(f"DEBUG: Uploading to S3 path: {file_key}")  # Debug line
         
         s3_client.upload_fileobj(
             file,
@@ -111,7 +112,7 @@ def query_agentcore_runtime(question):
 
 def main():
     st.set_page_config(
-        page_title="St Mary's Yr5 Class Rep Bot",
+        page_title="St Mary's Yr5 Class Rep Bot v2.0",
         page_icon="🎓",  # This shows in browser tab
         layout="wide",
         initial_sidebar_state="collapsed"
@@ -268,7 +269,7 @@ def main():
                         success, file_key = upload_to_s3(uploaded_file)
                         
                         if success:
-                            st.success(f"✅ Uploaded: {uploaded_file.name}")
+                            st.success(f"✅ Uploaded to school-docs: {uploaded_file.name} [v2025-09-15-16:51]")
                             
                             # Sync knowledge base
                             with st.spinner("Updating knowledge base..."):

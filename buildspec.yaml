@@ -1,14 +1,25 @@
 version: 0.2
+
 phases:
+  install:
+    runtime-versions:
+      docker: 20
+    commands:
+      - yum update -y
+      - yum install -y jq
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 185749752590.dkr.ecr.us-east-1.amazonaws.com
+      - TASK_FAMILY="school-qa-task"
+      - CLUSTER_NAME=${ECS_CLUSTER_NAME:-school-qa-cluster}
+      - SERVICE_NAME=${ECS_SERVICE_NAME:-school-qa-service}
+      - echo "Working with cluster $CLUSTER_NAME and service $SERVICE_NAME"
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image for ARM64...
-      - docker build --no-cache -t school-qa-agent .
+      - docker build -t school-qa-agent .
       - docker tag school-qa-agent:latest 185749752590.dkr.ecr.us-east-1.amazonaws.com/school-qa-agent:latest
   post_build:
     commands:
@@ -18,9 +29,35 @@ phases:
       - echo Image pushed successfully!
       - |
         if [ "$DEPLOYMENT_TYPE" = "ECS" ]; then
-          echo Updating ECS service...
-          aws ecs update-service --cluster ${ECS_CLUSTER_NAME:-school-qa-cluster} --service ${ECS_SERVICE_NAME:-school-qa-service} --force-new-deployment --region us-east-1
-          echo ECS service update triggered!
+          echo "Updating ECS service..."
+          
+          # Get current task definition and update image
+          aws ecs describe-task-definition --task-definition $TASK_FAMILY --query taskDefinition > task-definition.json
+          NEW_IMAGE="185749752590.dkr.ecr.us-east-1.amazonaws.com/school-qa-agent:latest"
+          jq --arg IMAGE "$NEW_IMAGE" '.containerDefinitions[0].image = $IMAGE' task-definition.json > new-task-definition.json
+          
+          # Register new task definition
+          NEW_TASK_DEF=$(aws ecs register-task-definition \
+            --family $TASK_FAMILY \
+            --execution-role-arn "$(jq -r '.executionRoleArn' task-definition.json)" \
+            --network-mode "$(jq -r '.networkMode' task-definition.json)" \
+            --cpu "$(jq -r '.cpu' task-definition.json)" \
+            --memory "$(jq -r '.memory' task-definition.json)" \
+            --requires-compatibilities "$(jq -c '.requiresCompatibilities' task-definition.json)" \
+            --container-definitions "$(jq -c '.containerDefinitions' new-task-definition.json)" \
+            --region us-east-1 \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+          
+          echo "New task definition created: $NEW_TASK_DEF"
+          
+          # Update service
+          aws ecs update-service \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_NAME \
+            --task-definition $NEW_TASK_DEF \
+            --region us-east-1
+          
+          echo "ECS service updated with new task definition!"
         else
-          echo Skipping ECS update for EC2 deployment
+          echo "Skipping ECS update for EC2 deployment"
         fi
