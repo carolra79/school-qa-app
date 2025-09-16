@@ -45,6 +45,7 @@ phases:
             --cpu "$(jq -r '.cpu' task-definition.json)" \
             --memory "$(jq -r '.memory' task-definition.json)" \
             --requires-compatibilities "$(jq -c '.requiresCompatibilities' task-definition.json)" \
+            --runtime-platform "$(jq -c '.runtimePlatform // {}' task-definition.json)" \
             --container-definitions "$(jq -c '.containerDefinitions' new-task-definition.json)" \
             --region us-east-1 \
             --query 'taskDefinition.taskDefinitionArn' --output text)
