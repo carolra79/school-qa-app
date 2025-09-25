@@ -1,0 +1,32 @@
+{
+  "fallback_links": {
+    "staffing": "https://st-marys.richmond.sch.uk/wp-content/uploads/2025/09/Staff-at-St-Marys-September-2025-Initials-v2.pdf",
+    "staff": "https://st-marys.richmond.sch.uk/wp-content/uploads/2025/09/Staff-at-St-Marys-September-2025-Initials-v2.pdf",
+    "teachers": "https://st-marys.richmond.sch.uk/wp-content/uploads/2025/09/Staff-at-St-Marys-September-2025-Initials-v2.pdf",
+    "governors": "https://st-marys.richmond.sch.uk/strategy/",
+    "governing": "https://st-marys.richmond.sch.uk/strategy/",
+    "chair": "https://st-marys.richmond.sch.uk/strategy/",
+    "dates": "https://st-marys.richmond.sch.uk/calendar/",
+    "calendar": "https://st-marys.richmond.sch.uk/calendar/",
+    "events": "https://st-marys.richmond.sch.uk/calendar/",
+    "term dates": "https://st-marys.richmond.sch.uk/term-dates/",
+    "admissions": "https://st-marys.richmond.sch.uk/admissions/",
+    "uniform": "https://st-marys.richmond.sch.uk/uniform/",
+    "contact": "https://st-marys.richmond.sch.uk/contact/",
+    "default": "https://st-marys.richmond.sch.uk/"
+  },
+  "uncertainty_keywords": [
+    "not available",
+    "cannot find",
+    "unclear",
+    "not specified",
+    "information is not available",
+    "not found in the documents",
+    "unable to find",
+    "no information",
+    "not mentioned",
+    "unfortunately",
+    "do not seem to mention",
+    "does not provide"
+  ]
+}

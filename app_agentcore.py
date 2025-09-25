@@ -16,6 +16,44 @@ def load_bedrock_config():
         with open('bedrock_config.json', 'r') as f:
             return json.load(f)
 
+@st.cache_data(ttl=300)  # Cache for 5 minutes
+def load_fallback_config():
+    """Load fallback links configuration from S3"""
+    try:
+        s3_client = boto3.client('s3', region_name=AWS_REGION)
+        response = s3_client.get_object(Bucket=S3_BUCKET, Key='config/fallback_links.json')
+        return json.loads(response['Body'].read().decode('utf-8'))
+    except Exception as e:
+        # Fallback to local config
+        with open('fallback_links.json', 'r') as f:
+            return json.load(f)
+
+def get_fallback_link(question, answer):
+    """Get appropriate fallback link based on question content and answer uncertainty"""
+    try:
+        config = load_fallback_config()
+        
+        # Check if answer indicates uncertainty
+        uncertainty_detected = any(keyword.lower() in answer.lower() 
+                                 for keyword in config['uncertainty_keywords'])
+        
+        if not uncertainty_detected:
+            return None
+            
+        # Match question to appropriate link
+        question_lower = question.lower()
+        fallback_links = config['fallback_links']
+        
+        for topic, link in fallback_links.items():
+            if topic != 'default' and topic in question_lower:
+                return link
+                
+        # Return default link if no specific match
+        return fallback_links['default']
+        
+    except Exception as e:
+        return None
+
 # Initialize session state
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
@@ -105,7 +143,14 @@ def query_agentcore_runtime(question):
             }
         )
         
-        return response['output']['text']
+        answer = response['output']['text']
+        
+        # Check if we need to add a fallback link
+        fallback_link = get_fallback_link(question, answer)
+        if fallback_link:
+            answer += f"\n\nFor more information, please visit: {fallback_link}"
+        
+        return answer
         
     except Exception as e:
         return f"Error querying knowledge base: {str(e)}"
@@ -170,12 +215,15 @@ def main():
         # Question input (submits on Enter)
         # Check if we have a selected question to populate
         default_question = st.session_state.get('selected_question', '')
+        if 'question_counter' not in st.session_state:
+            st.session_state.question_counter = 0
         
         question = st.text_input(
             "",
             value=default_question,
             placeholder="e.g. when are year 5 PE days",
-            help="Press Enter to submit or click Ask button"
+            help="Press Enter to submit or click Ask button",
+            key=f"question_input_{st.session_state.question_counter}"
         )
         
         # Add Ask button
@@ -200,7 +248,8 @@ def main():
                 if 'processing' in st.session_state:
                     del st.session_state.processing
                 
-                # Clear the question for next input
+                # Clear the question input by incrementing counter
+                st.session_state.question_counter += 1
                 st.rerun()
         
         # Display last answer below the input
