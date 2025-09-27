@@ -96,10 +96,9 @@ def upload_to_s3(file):
             file_key,
             ExtraArgs={'Metadata': {'uploaded_by': st.session_state.username}}
         )
-        return True, file_key
+        return True, None
     except Exception as e:
-        st.error(f"Error uploading to S3: {str(e)}")
-        return False, None
+        return False, str(e)
 
 def sync_knowledge_base():
     """Trigger knowledge base sync after upload"""
@@ -311,18 +310,12 @@ def main():
             if uploaded_file is not None:
                 if st.button("Upload Document"):
                     with st.spinner("Uploading..."):
-                        success, file_key = upload_to_s3(uploaded_file)
+                        success, error_msg = upload_to_s3(uploaded_file)
                         
                         if success:
-                            st.success(f"✅ Uploaded to school-docs: {uploaded_file.name} [v2025-09-15-16:51]")
-                            
-                            # Sync knowledge base
-                            with st.spinner("Updating knowledge base..."):
-                                sync_success, job_id = sync_knowledge_base()
-                                
-                                if sync_success:
-                                    st.info(f"🔄 Knowledge base sync started (Job: {job_id})")
-                                    st.info("New documents will be available for questions in a few minutes.")
+                            st.success(f"✅ File uploaded successfully: {uploaded_file.name}")
+                        else:
+                            st.error(f"❌ Error uploading file: {error_msg}")
             
             # Logout button
             if st.button("Logout"):
