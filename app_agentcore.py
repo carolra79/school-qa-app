@@ -215,15 +215,12 @@ def main():
         # Question input (submits on Enter)
         # Check if we have a selected question to populate
         default_question = st.session_state.get('selected_question', '')
-        if 'question_counter' not in st.session_state:
-            st.session_state.question_counter = 0
         
         question = st.text_input(
             "",
             value=default_question,
             placeholder="e.g. when are year 5 PE days",
-            help="Press Enter to submit or click Ask button",
-            key=f"question_input_{st.session_state.question_counter}"
+            help="Press Enter to submit or click Ask button"
         )
         
         # Add Ask button
@@ -248,8 +245,7 @@ def main():
                 if 'processing' in st.session_state:
                     del st.session_state.processing
                 
-                # Clear the question input by incrementing counter
-                st.session_state.question_counter += 1
+                # Clear the question for next input
                 st.rerun()
         
         # Display last answer below the input
